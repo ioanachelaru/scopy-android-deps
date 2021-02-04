@@ -3,7 +3,7 @@
 #export ANDROID_NDK=$HOME/Android/Sdk/ndk-bundle
 #export ANDROID_API=28
 #CMAKE="echo"
-echo DEV_PREFIX = $DEV_PREFIX
+#echo DEV_PREFIX = $DEV_PREFIX
 
 ################ HACK .. REMOVE ALL LIBRARIES FROM
 # ~/android/sdk/ndk/21.3.6528147/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/x86_64-linux-android
