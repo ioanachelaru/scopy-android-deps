@@ -10,20 +10,28 @@ export API=28 # need ABI at least 28 for glob from my tests
 export JOBS=9
 export SCRIPT_HOME_DIR=/home/adi/android/scopy-android-deps
 
-#export ABI=aarch64
-#export ABI=armv7a
+############ aarch64 #########
+#export ABI=arm64-v8a
+#export TARGET_PREFIX=aarch64-linux-android
+#export TARGET_BINUTILS=aarch64-linux-android
+#############################
+
+############# armv7a ##########
+#export ABI=armeabi-v7a
+#export TARGET_PREFIX=armv7a-linux-androideabi
+#export TARGET_BINUTILS=arm-linux-androideabi
+###############################
+
 ############# x86_64 ###########
 #export TARGET_BINUTILS=x86_64-linux-android
 #export ABI=x86_64
 #export TARGET_PREFIX=x86_64-linux-android
-#export TARGET=x86_64-none-linux-android$API
 #################################
 
 ######## x86 - i686 ############
 export TARGET_PREFIX=i686-linux-android
-export ABI=i686
+export ABI=x86
 export TARGET_BINUTILS=i686-linux-android
-#export TARGET=x86_64-none-linux-android$API
 #################################
 
 echo $TARGET_PREFIX
@@ -56,7 +64,6 @@ export AR=$TOOLCHAIN/bin/llvm-ar
 export AS=${CC}
 export NM=$TOOLCHAIN/bin/nm
 export LD=$TOOLCHAIN/bin/${TARGET_BINUTILS}-ld.gold
-#export LD=$TOOLCHAIN/bin/${TARGET_BINUTILS}-ld.gold
 #export LD=$TOOLCHAIN/bin/ld.lld
 #$LD
 export RANLIB=$TOOLCHAIN/bin/llvm-ranlib
@@ -67,7 +74,7 @@ export RANLIB=$TOOLCHAIN/bin/llvm-ranlib
 # -target $TARGET_TRIPLE
 export CFLAGS="-fPIE -fPIC --sysroot=${SYSROOT} -I${SYSROOT}/include -I${SYSROOT}/usr/include -I${TOOLCHAIN}/include -I${DEV_PREFIX} ${CFLAGS}"
 export CPPFLAGS="-fexceptions -frtti ${CFLAGS} "
-export LDFLAGS="${LDFLAGS} -pie -L${SYSROOT}/usr/lib/$TARGET/$API -L${TOOLCHAIN}/lib -L${DEV_PREFIX}"
-#export LDFLAGS="${LDFLAGS} -pie -L${SYSROOT}/usr/lib/$TARGET/$API -L${SYSROOT}/usr/lib -L${TOOLCHAIN}/lib -L${DEV_PREFIX}"
+export LDFLAGS="${LDFLAGS} -pie -L${SYSROOT}/usr/lib/$TARGET/$API -L${TOOLCHAIN}/lib -L${DEV_PREFIX} -L${DEV_PREFIX}/lib"
+#export LDFLAGS="${LDFLAGS} -pie -L${SYSROOT}/usr/lib/$TARGET/$API -L${SYSROOT}/usr/lib -L${TOOLCHAIN}/lib -L${DEV_PREFIX} -l"
 
 source $SCRIPT_HOME_DIR/android_qt_initial_cmake_params.in
