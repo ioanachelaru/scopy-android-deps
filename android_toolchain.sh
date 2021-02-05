@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source build_system_setup.sh
+source ./build_system_setup.sh
 
 export NDK_VERSION=21.3.6528147
 export API=28 # need ABI at least 28 for glob from my tests
@@ -46,9 +46,7 @@ export TARGET_BINUTILS=i686-linux-android
 #################################
 fi
 
-
 export WORKDIR=$SCRIPT_HOME_DIR/deps_build_$TARGET_PREFIX
-export DEPS_SRC_PATH=$SCRIPT_HOME_DIR/deps_src
 
 # This is just an empty directory where I want the built objects to be installed
 export DEV_PREFIX=$WORKDIR/out
@@ -97,3 +95,7 @@ export LDFLAGS="${LDFLAGS} -pie -L${SYSROOT}/usr/lib/$TARGET/$API -L${TOOLCHAIN}
 #echo SCRIPT_HOME_DIR=$SCRIPT_HOME_DIR
 #echo
 echo $TARGET_PREFIX$API
+#if [ $TARGET_PREFIX = "NO_ABI" ]; then
+#	exit 22 # Invalid argument
+#fi
+
