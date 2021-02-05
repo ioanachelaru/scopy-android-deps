@@ -103,13 +103,13 @@ build_boost() {
 }
 
 
-#reset_build_env
-#build_libiconv
-#build_libxml2
-#build_libiio
-#build_libad9361
-#build_libm2k
-build_gnuradio
+reset_build_env
+build_libiconv
+build_libxml2
+build_libiio
+build_libad9361
+build_libm2k
+#build_gnuradio
 #build_gr_oot - iio/m2k/scopy
 #build_qwt
 #build_qwt_polar
