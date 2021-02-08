@@ -147,10 +147,8 @@ build_gr-scopy() {
 
 build_qwt() {
 	pushd $WORKDIR
-	QWT_NAME=qwt-code-r3379-branches-qwt-6.1-multiaxes
-	wget https://sourceforge.net/code-snapshots/svn/q/qw/qwt/code/$QWT_NAME.zip
-	rm -rf $QWT_NAME
-	unzip $QWT_NAME.zip
+	QWT_NAME=qwt-code
+	svn checkout svn://svn.code.sf.net/p/qwt/code/branches/qwt-6.1-multiaxes $QWT_NAME
 	cd $QWT_NAME
 
 	sed -i "s/^QWT_CONFIG\\s*+=\\s*QwtMathML$/#/g" qwtconfig.pri
@@ -162,7 +160,7 @@ build_qwt() {
 	# Fix prefix
 	sed -i "s/^\\s*QWT_INSTALL_PREFIX.*$/QWT_INSTALL_PREFIX=\"\"/g" qwtconfig.pri
 
-	$QMAKE ANDROID_ABIS="$ABI" ANDROID_API_VERSION=$API INCLUDEPATH=$DEV_PREFIX/include LIBS=-L$DEV_PREFIX/lib qwt.pro
+	$QMAKE ANDROID_ABIS="$ABI" ANDROID_MIN_SDK_VERSION=$API ANDROID_API_VERSION=$API INCLUDEPATH=$DEV_PREFIX/include LIBS=-L$DEV_PREFIX/lib qwt.pro
 	make -j$JOBS INSTALL_ROOT=$DEV_PREFIX install
 
 	popd
@@ -293,30 +291,36 @@ build_scopy() {
 
 	pushd $WORKDIR
 	rm -rf scopy
-	git clone --depth 1 https://github.com/analogdevicesinc/scopy.git
+	git clone https://github.com/adisuciu/scopy.git --branch android
 	cd ${WORKDIR}/scopy
 	rm -rf build*
 	cp $SCRIPT_HOME_DIR/android_cmake.sh .
-	cp $SCRIPT_HOME_DIR/androiddeployqt_script.sh .
+	cp $SCRIPT_HOME_DIR/android_deploy_qt.sh .
 
 	./android_cmake.sh .
 	cd build_$ABI
 	make -j$JOBS
 	make -j$JOBS install
 	cd ..
-	./androiddeployqt_script.sh .
+	./android_deploy_qt.sh
 	popd
 }
 
 reset_build_env
 build_libiconv
+build_libffi
+build_gettext
+build_libiconv # HANDLE CIRCULAR DEP
+build_glib
+build_sigcpp
+build_glibmm
 build_libxml2
 build_boost
 move_boost_libs
 build_libzmq
 build_fftw
 build_libgmp
-build_libusb
+#build_libusb # THIS IS BUGGED I THINK
 build_libiio
 build_libad9361
 build_libm2k
@@ -327,12 +331,6 @@ build_gr-scopy
 build_gr-m2k
 build_qwt
 move_qwt_libs
-build_libffi
-build_gettext
-build_libiconv
-build_glib
-build_sigcpp
-build_glibmm
 build_python
 build_libsigrokdecode
 build_scopy
