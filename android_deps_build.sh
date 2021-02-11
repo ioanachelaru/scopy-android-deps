@@ -78,7 +78,7 @@ build_libad9361 () {
 build_libm2k() {
 	pushd $WORKDIR
 	rm -rf libm2k
-	git clone --depth=1 https://github.com/analogdevicesinc/libm2k --branch android
+	git clone --depth=1 https://github.com/analogdevicesinc/libm2k --branch master
 	cd libm2k
 	cp $SCRIPT_HOME_DIR/android_cmake.sh .
 	rm -rf $BUILD_FOLDER

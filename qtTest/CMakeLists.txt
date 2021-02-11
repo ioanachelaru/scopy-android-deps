@@ -64,9 +64,21 @@ set(ENV{PKG_CONFIG_PATH} /home/adi/android/scopy-android-deps/deps_build_x86_64-
 message($ENV{PKG_CONFIG_PATH})
 pkg_check_modules(qwt REQUIRED Qt5Qwt6)
 
+pkg_check_modules(GLIB REQUIRED glib-2.0)
+pkg_check_modules(GLIBMM REQUIRED glibmm-2.4)
+pkg_check_modules(SIGCPP REQUIRED sigc++-2.0)
+pkg_check_modules(LIBSIGROK_DECODE REQUIRED libsigrokdecode)
+
+#message(SEARCH ${CMAKE_PREFIX_PATH})
+#pkg_check_modules(Qt5Qwt6 REQUIRED Qt5Qwt6)
+
+pkg_get_variable(LIBSIGROK_DECODERS_DIR libsigrokdecode decodersdir)
+message(${LIBSIGROK_DECODERS_DIR})
+
 set(CMAKE_FIND_DEBUG_MODE OFF)
 
-include_directories(${IIO_INCLUDE_DIR})
+include_directories(${IIO_INCLUDE_DIR}
+		${LIBSIGROK_DECODE_INCLUDE_DIRS})
 
 set(PROJECT_SOURCES
         main.cpp
@@ -102,6 +114,7 @@ target_link_libraries(qtTest PRIVATE Qt${QT_VERSION_MAJOR}::Widgets ${IIO_LIBRAR
 					gnuradio::gnuradio-fft
 					gnuradio::gnuradio-filter
 					${pkgcfg_lib_qwt_qwt_${ANDROID_ABI}}
+					${LIBSIGROK_DECODE_LIBRARIES}
 			)
 
 message(STATUS " !!! YOU MUST Copy all ${CMAKE_STAGING_PREFIX}/lib/*.so to build/android-build/libs/<your arch>/ to deploy correctly !!! ")
