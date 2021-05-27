@@ -2,10 +2,56 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <iiomanager.h>
+#include <QString>
+#include <map>
+#include <boost/make_shared.hpp>
+
+#include <gnuradio/blocks/vector_source.h>
+#include <scope_sink_f.h>
+#include <oscilloscope_plot.hpp>
+#include "plotinstrument.h"
+#include <DisplayPlot.h>
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
+namespace adiscope {
+
+
+class DataSource {
+public:
+
+	DataSource() {}
+	~DataSource(){}
+
+	QString name;
+	IioManager *man;
+	gr::basic_block_sptr block;
+};
+
+class DataSourceUi
+{
+public:
+	DataSourceUi() {}
+	~DataSourceUi(){}
+	DataSource* ds;
+	QWidget* widget;
+
+};
+
+
+class DataSourceFactory
+{
+public:
+
+	DataSourceFactory() { }
+	~DataSourceFactory() { }
+	DataSource createDataSource(IioManager *man, QString type);
+	DataSourceUi createDataSourceUi(DataSource* ds, QString type, QWidget *parent=0);
+};
+
 
 class MainWindow : public QMainWindow
 {
@@ -14,15 +60,24 @@ class MainWindow : public QMainWindow
 public:
 	MainWindow(QWidget *parent = nullptr);
 	~MainWindow();
+	void gnuradioTest();
+	IioManager *man;
+	PlotInstrument *plotInstrument;
 
-private slots:
+	std::map<QString, DataSource> sources;
+	std::map<QString, DataSourceUi> uis;
+
+
+private Q_SLOTS:
+	void addSource();
+	void removeSource();
 	void on_pushButton_libiio_clicked();
-
 	void on_pushButton_libm2k_clicked();
-
 	void on_pushButton_clicked();
-
+Q_SIGNALS:
+	void topBlockChanged();
 private:
 	Ui::MainWindow *ui;
 };
+}
 #endif // MAINWINDOW_H
