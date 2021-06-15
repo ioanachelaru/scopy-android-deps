@@ -898,7 +898,7 @@ QPushButton[userNote=true]:checked {
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab_2">
        <attribute name="title">
@@ -941,6 +941,11 @@ QPushButton[userNote=true]:checked {
               <item>
                <property name="text">
                 <string>wav</string>
+               </property>
+              </item>
+              <item>
+               <property name="text">
+                <string>iio</string>
                </property>
               </item>
              </widget>
@@ -1041,6 +1046,25 @@ QPushButton[userNote=true]:checked {
            </widget>
           </item>
          </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton_2">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>200</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>scan</string>
+          </property>
+         </widget>
         </item>
         <item>
          <widget class="QTextEdit" name="textEdit"/>

@@ -13,6 +13,10 @@
 #include "plotinstrument.h"
 #include <DisplayPlot.h>
 
+#ifdef __ANDROID__
+#include <QAndroidJniEnvironment>
+#endif
+
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -29,6 +33,7 @@ public:
 	QString name;
 	IioManager *man;
 	gr::basic_block_sptr block;
+	unsigned int outputs;
 };
 
 class DataSourceUi
@@ -48,7 +53,7 @@ public:
 
 	DataSourceFactory() { }
 	~DataSourceFactory() { }
-	DataSource createDataSource(IioManager *man, QString type);
+	DataSource createDataSource(IioManager *man, QString type, int outputs);
 	DataSourceUi createDataSourceUi(DataSource* ds, QString type, QWidget *parent=0);
 };
 
@@ -63,7 +68,9 @@ public:
 	void gnuradioTest();
 	IioManager *man;
 	PlotInstrument *plotInstrument;
-
+#ifdef __ANDROID__
+	QAndroidJniEnvironment *jnienv;
+#endif
 	std::map<QString, DataSource> sources;
 	std::map<QString, DataSourceUi> uis;
 
@@ -74,6 +81,8 @@ private Q_SLOTS:
 	void on_pushButton_libiio_clicked();
 	void on_pushButton_libm2k_clicked();
 	void on_pushButton_clicked();
+	void on_pushButton_2_clicked();
+
 Q_SIGNALS:
 	void topBlockChanged();
 private:

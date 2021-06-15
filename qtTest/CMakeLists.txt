@@ -15,31 +15,43 @@ set(CMAKE_FIND_DEBUG_MODE OFF)
 # Check https://doc.qt.io/qt/deployment-android.html for more information.
 # They need to be set before the find_package( ...) calls below.
 
-#if(ANDROID)
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
-#    if (ANDROID_ABI STREQUAL "armeabi-v7a")
-#        set(ANDROID_EXTRA_LIBS
-#            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libcrypto.so
-#            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libssl.so)
-#    endif()
-#endif()
+if(ANDROID)
+    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
+    if (ANDROID_ABI STREQUAL "armeabi-v7a")
+	set(ANDROID_EXTRA_LIBS
+	    ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libcrypto.so
+	    ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libssl.so)
+    endif()
+endif()
 
 find_package(QT NAMES Qt6 Qt5 COMPONENTS Widgets Svg REQUIRED)
 find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets Svg REQUIRED)
 
+if(ANDROID)
+	find_package(Qt5AndroidExtras REQUIRED)
+endif()
 #message(1)
 find_library(IIO_LIBRARIES NAMES libiio iio REQUIRED)
+#find_library(USB_LIBRARIES NAMES libusb usb REQUIRED)
+find_library(LIBUSB_LIBRARIES NAMES usb-1.0 usb)
+
 find_path(IIO_INCLUDE_DIR iio.h)
 #message(11 ${IIO_INCLUDE_DIR})
 
 #message(${CMAKE_STAGING_PREFIX})
 #set(CMAKE_FIND_USE_CMAKE_SYSTEM_PATH ON)
 
-#message(123 ${CMAKE_SYSTEM_PREFIX_PATH})
+message(123 ${CMAKE_SYSTEM_PREFIX_PATH})
+#set(CMAKE_STAGING_PREFIX ${CMAKE_STAGING_PREFIX})
 #set(CMAKE_PREFIX_PATH ${CMAKE_PREFIX_PATH};${CMAKE_STAGING_PREFIX})
-#set(CMAKE_MODULE_PATH ${CMAKE_STAGING_PREFIX}/lib/cmake)
-#message(123 ${CMAKE_PREFIX_PATH})
-find_package(libm2k REQUIRED)
+#set(CMAKE_MODULE_PATH ${CMAKE_STAGING_PREFIX})
+message(123 ${CMAKE_STAGING_PREFIX})
+
+message(123 ${CMAKE_PREFIX_PATH})
+
+set(CMAKE_FIND_DEBUG_MODE TRUE)
+find_package(libm2k REQUIRED PATH_SUFFIXES lib/cmake/libm2k)
+set(CMAKE_FIND_DEBUG_MODE FALSE)
 
 
 IF(NOT DEFINED BOOST_ROOT)
@@ -53,7 +65,13 @@ set(Boost_ARCHITECTURE "")
 find_package(Boost COMPONENTS system filesystem thread chrono REQUIRED)
 find_package(Gnuradio "3.8" REQUIRED COMPONENTS runtime analog blocks fft filter volk pmt )
 
-find_package(gnuradio-iio REQUIRED PATH_SUFFIXES iio)
+link_directories(
+	${Boost_LIBRARY_DIRS}
+	${GNURADIO_RUNTIME_LIBRARY_DIRS}
+	)
+#set(CMAKE_FIND_DEBUG_MODE TRUE)
+find_package(gnuradio-iio REQUIRED PATH_SUFFIXES lib/cmake/iio)
+#set(CMAKE_FIND_DEBUG_MODE FALSE)
 
 find_library(QWT_LIBRARIES REQUIRED NAMES qwt qwt_${ANDROID_ABI})
 
@@ -78,10 +96,12 @@ pkg_get_variable(LIBSIGROK_DECODERS_DIR libsigrokdecode decodersdir)
 message(${LIBSIGROK_DECODERS_DIR})
 
 set(CMAKE_FIND_DEBUG_MODE OFF)
+message(${ANDROID_PACKAGE_SOURCE_DIR} aaa)
 
 include_directories(${IIO_INCLUDE_DIR}
 		${QWT_INCLUDE_DIRS}
 		${LIBSIGROK_DECODE_INCLUDE_DIRS}
+		${Qt5AndroidExtras_INCLUDE_DIRS}
 		${GLIBMM_INCLUDE_DIRS})
 
 file(GLOB PROJECT_SOURCES  *.c *.cpp *.h *.ui *.cc *.hpp logicanalyzer/*.cpp logicanalyzer/*.hpp logicanalyzer/binding/*.cpp logicanalyzer/binding/*.hpp logicanalyzer/prop/*.cpp)
@@ -188,14 +208,13 @@ message(111 ${pkgcfg_lib_qwt_qwt_${ANDROID_ABI}})
 
 message(1112 ${QWT_LIBRARIES})
 
-link_directories(
-	${Boost_LIBRARY_DIRS}
-	${GNURADIO_RUNTIME_LIBRARY_DIRS}
-	)
 target_link_libraries(qtTest PRIVATE
 					Qt${QT_VERSION_MAJOR}::Widgets
 					Qt${QT_VERSION_MAJOR}::Svg
 					${IIO_LIBRARIES}
+					${LIBUSB_LIBRARIES}
+					${Boost_LIBRARIES}
+					${Qt5AndroidExtras_LIBRARIES}
 					libm2k::libm2k
 					gnuradio::gnuradio-runtime
 					gnuradio::gnuradio-analog

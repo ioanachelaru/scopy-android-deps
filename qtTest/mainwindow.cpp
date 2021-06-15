@@ -9,6 +9,8 @@
 #include "scope_sink_f.h"
 #include "vectordatasourceui.h"
 #include "wavsourceui.h"
+#include "veciiosource.h"
+#include "iiosourceui.h"
 #include <QDebug>
 
 
@@ -25,8 +27,15 @@
 #include <qwt_symbol.h>
 #include <qwt_legend.h>
 #include <gnuradio/hier_block2.h>
-#include <gnuradio/iio/device_source.h>
+#include <iio/device_source.h>
 #include <gnuradio/blocks/short_to_float.h>
+#include <stream_to_vector_overlap.h>
+#include <gnuradio/blocks/vector_sink.h>
+#include <QTimer>
+#ifdef __ANDROID__
+	#include "jnimessenger.h"
+#include <libusb.h>
+#endif
 
 
 
@@ -49,7 +58,7 @@ QwtPlot *plot;
 
 using namespace adiscope;
 
-DataSource DataSourceFactory::createDataSource(IioManager* man, QString type)
+DataSource DataSourceFactory::createDataSource(IioManager* man, QString type, int outputs)
 {
 	static int i=0;
 	auto scopyTop = man->getTopBlock("test");
@@ -65,13 +74,20 @@ DataSource DataSourceFactory::createDataSource(IioManager* man, QString type)
 
 	} else if(type == "iio") {
 		auto iiosrc = gr::blocks::vector_source<float>::make({});
+
 		src = iiosrc;
 
-	} else { ;}
+	} else if(type == "vec-iio") {
+		auto iiosrc = gr::blocks::vector_source<float>::make({});
+		src = iiosrc;
+	}
+
+	else { ;}
 
 	i++;
 	DataSource ds;
 	ds.block = src;
+	ds.outputs = outputs;
 	ds.man = man;
 	ds.name = "";
 	scopyTop->addSource(src);
@@ -87,7 +103,9 @@ DataSourceUi DataSourceFactory::createDataSourceUi(DataSource* ds, QString type,
 	} else if(type=="wav") {
 		ret = new WavSourceUi(ds, parent);
 	} else if(type =="iio") {
-//		ret = new IioSourceUi(ds, parent);
+		ret = new IioSourceUi(ds, parent);
+	} else if(type =="iio") {
+		ret = new VecIioSourceUi(ds, parent);
 	} else {; }
 
 	DataSourceUi ui;
@@ -103,6 +121,34 @@ void MainWindow::gnuradioTest()
 	man = new adiscope::IioManager(this);
 	man->addTopBlock("test");
 	auto scopyTop = man->getTopBlock("test");
+
+
+	std::vector<float> testData[2];
+	int test_nr_of_samples  = 1024;
+	for(auto i=0;i<test_nr_of_samples;i++)
+	{
+		testData[0].push_back(i/(float)test_nr_of_samples);
+		testData[1].push_back((test_nr_of_samples-i)/(float)test_nr_of_samples);
+	}
+	auto vec_src = gr::blocks::vector_source<float>::make(testData[0]);
+	vec_src->set_repeat(true);
+	auto th = gr::blocks::throttle::make(sizeof(float),2000);
+	auto s2vo = stream_to_vector_overlap::make(sizeof(float),testData[0].size()/2,0);
+	auto vs = gr::blocks::vector_sink<float>::make(testData[0].size()/2);
+
+	//scopyTop->connect(vec_src,0,s2vo,0);
+	//scopyTop->connect(s2vo,0,vs,0);
+	scopyTop->connect(vec_src,0,th,0);
+	scopyTop->connect(th,0,s2vo,0);
+	scopyTop->connect(s2vo,0,vs,0);
+
+
+	QTimer *timer = new QTimer(this);
+	connect(timer,&QTimer::timeout,this,[=]{
+		//qDebug()<<vs->data().size();
+		vs->reset();
+	});
+	timer->start(500);
 
 
 	/*scope_sink[0] = scope_sink_f::make(nb_points,sample_rate,"bla0",1,scopyPlot);
@@ -157,7 +203,7 @@ void MainWindow::addSource()
 	};
 
 	DataSourceFactory fac;
-	sources[sinkName] = fac.createDataSource(man, ui->sinkCmb->currentText());
+	sources[sinkName] = fac.createDataSource(man, ui->sinkCmb->currentText(),1);
 
 	uis[sinkName] = fac.createDataSourceUi(&sources[sinkName], ui->sinkCmb->currentText(), this);
 
@@ -197,12 +243,38 @@ void MainWindow::removeSource()
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, ui(new Ui::MainWindow)
+#ifdef __ANDROID__
+	, jnienv(new QAndroidJniEnvironment())
+#endif
+
 {
+
 	ui->setupUi(this);
+#ifdef __ANDROID__
+	int retval = libusb_set_option(NULL,LIBUSB_OPTION_ANDROID_JAVAVM,jnienv->javaVM());
+	if (0 < retval)
+	{
+		qDebug()<< " - ERROR in libusb_set_option: " << retval;
+	}
+
+	retval = libusb_set_option(NULL, LIBUSB_OPTION_WEAK_AUTHORITY, NULL);
+	if (0 < retval)
+	{
+		qDebug()<< " - ERROR in libusb_set_option: " << retval;
+	}
+
+#endif
+
 	unsigned int maj,min;
 	char tag[20];
 	iio_library_get_version(&maj,&min,tag);
-	QString library_version("libiio version: " + QString::number(maj)+"."+QString::number(min)+"\n");
+	QString backend = "";
+	for(auto i=0;i<iio_get_backends_count();i++)
+	{
+		backend+=iio_get_backend(i);
+		backend+=" ";
+	}
+	QString library_version("libiio version: " + QString::number(maj)+"."+QString::number(min)+" with backends: "+backend+"\n");
 	library_version+=("libm2k version: "+ QString::fromStdString(getVersion())+"\n");
 	library_version+=("gnuradio version "+ QString::fromStdString(gr::version()));
 
@@ -329,3 +401,42 @@ void MainWindow::on_pushButton_clicked()
 	Uri = ui->lineEdit_uri->text();
 	ui->label_uri->setText("Connecting to: " +QString(Uri));
 }
+
+void MainWindow::on_pushButton_2_clicked()
+{
+
+	/*JniMessenger *jniMessenger = new JniMessenger(this);
+	jniMessenger->printFromJava("ABCD");
+	jniMessenger->getUsbFd("abc");*/
+
+	struct iio_context_info **info;
+		unsigned int nb_contexts;
+		QStringList uris;
+
+		struct iio_scan_context *scan_ctx = iio_create_scan_context("usb", 0);
+
+		if (!scan_ctx) {
+			std::cerr << "Unable to create scan context!" << std::endl;
+			return;
+
+		}
+
+		ssize_t ret = iio_scan_context_get_info_list(scan_ctx, &info);
+
+		if (ret < 0) {
+			std::cerr << "Unable to scan!" << std::endl;
+			goto out_destroy_context;
+		}
+
+		nb_contexts = static_cast<unsigned int>(ret);
+		qDebug()<<nb_contexts << "contexts found ";
+		for (unsigned int i = 0; i < nb_contexts; i++)
+			uris.append(QString(iio_context_info_get_uri(info[i])));
+
+		iio_context_info_list_free(info);
+	out_destroy_context:
+		iio_scan_context_destroy(scan_ctx);
+		ui->textEdit->setText(uris.join(" "));
+
+}
+

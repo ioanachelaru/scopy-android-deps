@@ -72,7 +72,7 @@ void PlotInstrument::buildFlowGraph(){
 		scopyPlot->setUsingLeftAxisScales(true);
 
 		sink->set_trigger_mode(TRIG_MODE_FREE, 0, "");
-		sink->set_update_time(0.001);
+		sink->set_update_time(0.1);
 		scope_sink.push_back(sink);
 
 		scopyPlot->Curve(i)->setAxes(

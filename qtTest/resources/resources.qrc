@@ -159,16 +159,12 @@
         <file>translations/scopy_jp.ts</file>
         <file>translations/scopy_kr.ts</file>
         <file>translations/scopy_ro.ts</file>
-        <file>about.html.cmakein</file>
         <file>aboutpage.qrc</file>
-        <file>buildinfo.html.cmakein</file>
-        <file>credits.html.cmakein</file>
         <file>icon_big.svg</file>
         <file>icon_small.svg</file>
         <file>resources.qrc</file>
         <file>scopy.desktop.cmakein</file>
         <file>Scopy.icns</file>
-        <file>scopy_osp.html.cmakein</file>
         <file>translations.qrc</file>
         <file>stylesheets/default.qss</file>
         <file>icons/scopy-default/index.theme</file>

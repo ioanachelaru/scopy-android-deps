@@ -2246,7 +2246,7 @@ void CapturePlot::onNewDataReceived()
 		}
 
 		measure->setSampleRate(this->sampleRate());
-		measure->measure();
+//		measure->measure();
 	}
 
 	Q_EMIT measurementsAvailable();
